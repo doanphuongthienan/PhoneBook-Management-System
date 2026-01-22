@@ -3,7 +3,7 @@ def clear_screen():
 
 
 def pause():
-    input("Nhấn Enter để tiếp tục...")
+    input("Press Enter to continue...")
 
 
 def print_header(title):
