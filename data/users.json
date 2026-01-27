@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "user_id": 1,
+    "full_name": "xuân anh",
+    "email": "hnt@gmail.com",
+    "phone": "0916",
+    "password": "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414",
+    "created_at": "2026-01-27T12:10:46.770706"
+  },
+  {
+    "user_id": 2,
+    "full_name": "Nguyen Van A",
+    "email": "abc@gmail.com",
+    "phone": "789",
+    "password": "8bb0cf6eb9b17d0f7d22b456f121257dc1254e1f01665370476383ea776df414",
+    "created_at": "2026-01-27T13:09:29.440169"
+  },
+  {
+    "user_id": 3,
+    "full_name": "an",
+    "email": "abc12@gmail.com",
+    "phone": "123",
+    "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "created_at": "2026-01-27T15:50:12.651459"
+  }
+]

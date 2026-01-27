@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "contact_id": 1,
+    "name": "nguyen van a",
+    "phone": "077693",
+    "email": "nva@gmail.com",
+    "owner_id": 2,
+    "address": "",
+    "notes": "",
+    "birthday": "",
+    "groups": [
+      "Team 4"
+    ],
+    "created_at": "2026-01-27T22:32:54.567091",
+    "updated_at": "2026-01-27T22:32:54.567091"
+  }
+]
