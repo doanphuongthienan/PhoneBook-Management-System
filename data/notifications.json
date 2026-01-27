@@ -1,0 +1,10 @@
+[
+  {
+    "notification_id": 1,
+    "user_id": 1,
+    "message": "Test notification",
+    "notification_type": "system",
+    "created_at": "2026-01-27T10:48:07.044336",
+    "is_read": true
+  }
+]

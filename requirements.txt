@@ -1,0 +1,10 @@
+# Phone Book Management System Requirements
+
+# For Tkinter GUI (tkinter comes with Python, but Pillow is optional for image handling)
+Pillow>=10.0.0
+
+# For console UI
+# No additional dependencies required
+
+# python-dotenv==1.0.0
+# email-validator==2.1.0
