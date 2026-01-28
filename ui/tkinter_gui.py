@@ -319,6 +319,10 @@ class GuestContactViewFrame(BaseFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         
+        self.all_contacts = []  # Store all contacts
+        self.current_displayed_contacts = []  # Store currently displayed contacts
+        self.selected_index = None
+        
         # Header
         header_frame = tk.Frame(self, bg=COLORS['primary'], height=50)
         header_frame.pack(fill="x")
@@ -338,18 +342,174 @@ class GuestContactViewFrame(BaseFrame):
         
         info_label = tk.Label(
             content_frame,
-            text="Guest mode allows you to browse contacts.\nRegister or Login to add/edit/delete contacts.",
+            text="Guest mode allows you to view and search contacts.\nRegister or Login to add/edit/delete contacts.",
             font=("Arial", 12),
             bg=COLORS['bg'],
             fg=COLORS['text'],
             justify="center"
         )
-        info_label.pack(pady=20)
+        info_label.pack(pady=10)
         
+        # Search frame
+        search_frame = tk.Frame(content_frame, bg=COLORS['bg'])
+        search_frame.pack(fill="x", pady=10)
+        
+        tk.Label(search_frame, text="Search:", font=("Arial", 10), bg=COLORS['bg']).pack(side="left", padx=5)
+        self.search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30)
+        search_entry.pack(side="left", padx=5)
+        search_entry.bind('<Return>', lambda e: self.do_search())
+        
+        self.create_button(search_frame, "Search", self.do_search, width=10)
+        self.create_button(search_frame, "View All", self.load_all_contacts, width=10)
+        
+        # Results frame with scrollbar
+        results_frame = tk.Frame(content_frame, bg=COLORS['bg'])
+        results_frame.pack(fill="both", expand=True, pady=10)
+        
+        scrollbar = ttk.Scrollbar(results_frame)
+        scrollbar.pack(side="right", fill="y")
+        
+        self.contacts_listbox = tk.Listbox(
+            results_frame,
+            yscrollcommand=scrollbar.set,
+            font=("Arial", 10),
+            height=15
+        )
+        self.contacts_listbox.pack(fill="both", expand=True)
+        self.contacts_listbox.bind('<<ListboxSelect>>', self.on_contact_select)
+        scrollbar.config(command=self.contacts_listbox.yview)
+        
+        # Button frame
         button_frame = tk.Frame(content_frame, bg=COLORS['bg'])
-        button_frame.pack(pady=20)
+        button_frame.pack(pady=10)
         
-        self.create_button(button_frame, "BACK TO LOGIN", self.back_to_login, width=20)
+        self.create_button(button_frame, "View Details", self.view_contact_details, width=15)
+        self.create_button(button_frame, "BACK TO LOGIN", self.back_to_login, width=15)
+        
+        # Load all contacts initially
+        self.load_all_contacts()
+    
+    def get_all_contacts_from_file(self):
+        """Load all contacts directly from JSON file"""
+        try:
+            with open("data/contacts.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading contacts: {e}")
+            return []
+    
+    def load_all_contacts(self):
+        """Load and display all contacts"""
+        self.contacts_listbox.delete(0, tk.END)
+        self.search_var.set("")
+        
+        try:
+            self.all_contacts = self.get_all_contacts_from_file()
+            self.current_displayed_contacts = self.all_contacts
+            
+            if not self.all_contacts:
+                self.contacts_listbox.insert(tk.END, "No contacts found.")
+            else:
+                for contact in self.all_contacts:
+                    # Map different field names that might exist
+                    name = contact.get('full_name') or contact.get('name', 'Unknown')
+                    phone = contact.get('phone_number') or contact.get('phone', 'No phone')
+                    display_text = f"{name} - {phone}"
+                    self.contacts_listbox.insert(tk.END, display_text)
+                    self.contacts_listbox.itemconfig(tk.END, {'bg': COLORS['light']})
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load contacts: {str(e)}")
+            self.contacts_listbox.insert(tk.END, f"Error: {str(e)}")
+    
+    def do_search(self):
+        """Search contacts by name or phone"""
+        search_term = self.search_var.get().strip().lower()
+        if not search_term:
+            messagebox.showwarning("Warning", "Please enter a search term.")
+            return
+        
+        self.contacts_listbox.delete(0, tk.END)
+        
+        try:
+            # Search through all contacts (not just user's)
+            all_contacts = self.get_all_contacts_from_file()
+            results = []
+            
+            for contact in all_contacts:
+                name = contact.get('full_name') or contact.get('name', '')
+                phone = contact.get('phone_number') or contact.get('phone', '')
+                email = contact.get('email', '')
+                
+                if (search_term in name.lower() or 
+                    search_term in phone.lower() or 
+                    search_term in email.lower()):
+                    results.append(contact)
+            
+            self.current_displayed_contacts = results
+            
+            if not results:
+                self.contacts_listbox.insert(tk.END, "No contacts found.")
+            else:
+                for contact in results:
+                    name = contact.get('full_name') or contact.get('name', 'Unknown')
+                    phone = contact.get('phone_number') or contact.get('phone', 'No phone')
+                    display_text = f"{name} - {phone}"
+                    self.contacts_listbox.insert(tk.END, display_text)
+                    self.contacts_listbox.itemconfig(tk.END, {'bg': COLORS['light']})
+        except Exception as e:
+            messagebox.showerror("Error", f"Search failed: {str(e)}")
+            self.contacts_listbox.insert(tk.END, f"Error: {str(e)}")
+    
+    def on_contact_select(self, event):
+        """Handle contact selection"""
+        selection = self.contacts_listbox.curselection()
+        if selection:
+            self.selected_index = selection[0]
+        else:
+            self.selected_index = None
+    
+    def view_contact_details(self):
+        """View selected contact details"""
+        if self.selected_index is None:
+            messagebox.showwarning("Warning", "Please select a contact.")
+            return
+        
+        selection_text = self.contacts_listbox.get(self.selected_index)
+        if selection_text == "No contacts found." or "Error:" in selection_text:
+            messagebox.showinfo("Info", "No valid contact to view.")
+            return
+        
+        try:
+            if self.selected_index < len(self.current_displayed_contacts):
+                contact = self.current_displayed_contacts[self.selected_index]
+                
+                # Map different field names
+                name = contact.get('full_name') or contact.get('name', 'N/A')
+                email = contact.get('email', 'N/A')
+                phone = contact.get('phone_number') or contact.get('phone', 'N/A')
+                address = contact.get('address', 'N/A')
+                dob = contact.get('date_of_birth') or contact.get('birthday', 'N/A')
+                
+                details = f"""
+Contact Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: {name}
+Email: {email}
+Phone: {phone}
+Address: {address}
+Date of Birth: {dob}
+                """
+                messagebox.showinfo("Contact Details", details)
+            else:
+                messagebox.showwarning("Error", "Contact not found.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to view details: {str(e)}")
+    
+    def back_to_login(self):
+        """Go back to login frame"""
+        self.controller.show_frame(LoginFrame)
+
 
 
 class DashboardFrame(BaseFrame):

@@ -8,4 +8,3 @@ class ContactGroup:
             "contact_id": self.contact_id,
             "group_id": self.group_id
         }
-
